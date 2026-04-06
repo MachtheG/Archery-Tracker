@@ -5,8 +5,9 @@ import { useAuth } from "../contexts/AuthContext";
 type Update = { id: number; coach: string; content: string; date: string };
 
 const initialUpdates: Update[] = [
-  { id: 1, coach: "Coach Wanjiru", content: "National Trials: March 10, Nairobi", date: "2026-02-18" },
-  { id: 2, coach: "Coach Otieno", content: "County League: March 24, Kisumu", date: "2026-02-19" },
+  { id: 1, coach: "Coach Wanjiru", content: "🏹 National Trials: March 10 at Kasarani, Nairobi. All categories. Registration closes March 5.", date: "2026-02-18" },
+  { id: 2, coach: "Coach Otieno", content: "📍 County League Round 3: March 24 at Kisumu Archery Range. Recurve & Compound.", date: "2026-02-19" },
+  { id: 3, coach: "Admin KAF", content: "📋 Team selection for All-Africa Games announced. Check your email for details.", date: "2026-02-20" },
 ];
 
 export default function NationalUpdates() {
@@ -14,6 +15,8 @@ export default function NationalUpdates() {
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
+
+  const canPost = user?.role === "coach" || user?.role === "admin";
 
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,41 +33,47 @@ export default function NationalUpdates() {
   };
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', fontWeight: 800 }}>National Updates</h1>
-      {user?.role === "coach" ? (
-        <form onSubmit={handlePost} style={{ margin: '2rem 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <textarea
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Announce a new competition or update..."
-            rows={3}
-            style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 16 }}
-          />
-          <button type="submit" style={{ background: '#d32f2f', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7em 1.5em', fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-end' }}>Post</button>
-          {error && <div style={{ color: '#d32f2f', fontWeight: 600 }}>{error}</div>}
-        </form>
-      ) : user ? (
-        <div style={{ textAlign: 'center', margin: '2rem 0', color: '#888' }}>Only coaches can post updates.</div>
-      ) : (
-        <div style={{ textAlign: 'center', margin: '2rem 0', color: '#888' }}>Log in to view and post updates.</div>
+    <div className="page-wrap">
+      <h1 className="page-title">National Updates</h1>
+      <p className="page-subtitle">Competitions, events, and announcements from Archery Kenya</p>
+
+      {canPost && (
+        <div className="card" style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 14 }}>Post an Update</h2>
+          <form onSubmit={handlePost} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <textarea
+              className="textarea"
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder="Announce a competition, event, or national update..."
+              rows={3}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              {error && <span className="error-text">{error}</span>}
+              <button type="submit" className="btn btn-red" style={{ marginLeft: "auto" }}>Post Update</button>
+            </div>
+          </form>
+        </div>
       )}
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Latest Announcements</h2>
-        {updates.length === 0 ? (
-          <div style={{ color: '#888' }}>No updates yet.</div>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {updates.map(update => (
-              <li key={update.id} style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', marginBottom: 16, padding: 16, textAlign: 'left' }}>
-                <div style={{ fontWeight: 600, color: '#d32f2f' }}>{update.coach}</div>
-                <div style={{ margin: '8px 0' }}>{update.content}</div>
-                <div style={{ fontSize: 13, color: '#888', textAlign: 'right' }}>{update.date}</div>
-              </li>
-            ))}
-          </ul>
-        )}
+
+      {user && !canPost && (
+        <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: "0.9rem" }}>Only coaches and admins can post updates.</p>
+      )}
+      {!user && (
+        <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: "0.9rem" }}>Log in to view full features.</p>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {updates.map(update => (
+          <div key={update.id} className="card" style={{ borderLeft: "3px solid var(--ke-red)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ fontWeight: 700, color: "var(--ke-red)", fontSize: "0.95rem" }}>{update.coach}</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{update.date}</span>
+            </div>
+            <p style={{ fontSize: "0.95rem", color: "var(--text-primary)", lineHeight: 1.6 }}>{update.content}</p>
+          </div>
+        ))}
       </div>
-    </main>
+    </div>
   );
 }

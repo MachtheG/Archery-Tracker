@@ -5,9 +5,9 @@ import { useAuth } from "../contexts/AuthContext";
 type Post = { id: number; author: string; content: string; date: string };
 
 const initialPosts: Post[] = [
-  { id: 1, author: "Coach Wanjiru", content: "Always warm up before shooting.", date: "2026-02-18" },
-  { id: 2, author: "Archer Kimani", content: "Check your nocking point every session.", date: "2026-02-19" },
-  { id: 3, author: "Coach Otieno", content: "Mental focus is as important as form.", date: "2026-02-19" },
+  { id: 1, author: "Coach Wanjiru", content: "Always warm up before shooting — 10 min stretching then 10 blank bale arrows.", date: "2026-02-18" },
+  { id: 2, author: "Archer Kimani", content: "Check your nocking point every session. A 1mm shift can affect grouping significantly.", date: "2026-02-19" },
+  { id: 3, author: "Coach Otieno", content: "Mental focus is as important as form. Try box breathing before each end: 4-4-4-4.", date: "2026-02-19" },
 ];
 
 export default function Resources() {
@@ -31,39 +31,36 @@ export default function Resources() {
   };
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', fontWeight: 800 }}>Archery Resources & Tips</h1>
+    <div className="page-wrap">
+      <h1 className="page-title">Resources & Tips</h1>
+      <p className="page-subtitle">Archery knowledge shared by the community</p>
+
       {user ? (
-        <form onSubmit={handlePost} style={{ margin: '2rem 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <textarea
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            placeholder="Share a tip or resource..."
-            rows={3}
-            style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 16 }}
-          />
-          <button type="submit" style={{ background: '#006600', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7em 1.5em', fontWeight: 700, cursor: 'pointer', alignSelf: 'flex-end' }}>Post</button>
-          {error && <div style={{ color: '#d32f2f', fontWeight: 600 }}>{error}</div>}
-        </form>
+        <div className="card" style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 14 }}>Share a Tip</h2>
+          <form onSubmit={handlePost} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <textarea className="textarea" value={content} onChange={e => setContent(e.target.value)} placeholder="Share a tip, resource, or technique..." rows={3} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              {error && <span className="error-text">{error}</span>}
+              <button type="submit" className="btn btn-green" style={{ marginLeft: "auto" }}>Post</button>
+            </div>
+          </form>
+        </div>
       ) : (
-        <div style={{ textAlign: 'center', margin: '2rem 0', color: '#888' }}>Log in to post your own tips.</div>
+        <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: "0.9rem" }}>Log in to share your own tips.</p>
       )}
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Latest Tips & Resources</h2>
-        {posts.length === 0 ? (
-          <div style={{ color: '#888' }}>No tips yet.</div>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {posts.map(post => (
-              <li key={post.id} style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', marginBottom: 16, padding: 16, textAlign: 'left' }}>
-                <div style={{ fontWeight: 600, color: '#006600' }}>{post.author}</div>
-                <div style={{ margin: '8px 0' }}>{post.content}</div>
-                <div style={{ fontSize: 13, color: '#888', textAlign: 'right' }}>{post.date}</div>
-              </li>
-            ))}
-          </ul>
-        )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {posts.map(post => (
+          <div key={post.id} className="card">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ fontWeight: 700, color: "var(--ke-green)", fontSize: "0.95rem" }}>{post.author}</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{post.date}</span>
+            </div>
+            <p style={{ fontSize: "0.95rem", color: "var(--text-primary)", lineHeight: 1.6 }}>{post.content}</p>
+          </div>
+        ))}
       </div>
-    </main>
+    </div>
   );
 }

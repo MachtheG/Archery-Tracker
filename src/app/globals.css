@@ -1,33 +1,55 @@
+/* ===== Kenya Archery Tracker — Design System ===== */
+
+/* Import Inter from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Kenya flag palette */
+  --ke-black: #111111;
+  --ke-red: #BB1600;
+  --ke-green: #006B3F;
+  --ke-white: #FFFFFF;
+  --ke-gold: #D4A017;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  /* UI tokens */
+  --bg-primary: #FAFAF7;
+  --bg-card: #FFFFFF;
+  --bg-dark: #111111;
+  --text-primary: #1A1A1A;
+  --text-secondary: #5A5A5A;
+  --text-muted: #9A9A9A;
+  --border-light: #E8E5E0;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Navbar */
+  --nav-height: 60px;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
 a {
@@ -35,8 +57,183 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+img { max-width: 100%; }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-red {
+  background: var(--ke-red);
+  color: var(--ke-white);
+}
+.btn-red:hover:not(:disabled) {
+  background: #9A1200;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-green {
+  background: var(--ke-green);
+  color: var(--ke-white);
+}
+.btn-green:hover:not(:disabled) {
+  background: #005530;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-gold {
+  background: var(--ke-gold);
+  color: var(--ke-black);
+}
+.btn-gold:hover:not(:disabled) {
+  background: #C69415;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-dark {
+  background: var(--ke-black);
+  color: var(--ke-white);
+}
+.btn-dark:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ke-black);
+  border: 1.5px solid var(--border-light);
+}
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--ke-black);
+  background: var(--bg-primary);
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  padding: 24px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== Form Elements ===== */
+.input, .textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+.input:focus, .textarea:focus {
+  border-color: var(--ke-green);
+}
+.textarea { resize: vertical; }
+
+.select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  cursor: pointer;
+  outline: none;
+}
+.select:focus { border-color: var(--ke-green); }
+
+/* ===== Kenyan accent bar ===== */
+.ke-stripe {
+  height: 4px;
+  background: linear-gradient(90deg, var(--ke-black) 0%, var(--ke-black) 33%, var(--ke-red) 33%, var(--ke-red) 66%, var(--ke-green) 66%, var(--ke-green) 100%);
+}
+
+/* ===== Page wrappers ===== */
+.page-wrap {
+  min-height: calc(100vh - var(--nav-height) - 4px);
+  padding: 40px 24px 60px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.page-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+/* ===== Role badges ===== */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-archer { background: #E8F5E9; color: var(--ke-green); }
+.badge-coach  { background: #FFF3E0; color: #E65100; }
+.badge-admin  { background: #FCE4EC; color: var(--ke-red); }
+
+/* ===== Error text ===== */
+.error-text {
+  color: var(--ke-red);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .page-wrap { padding: 24px 16px 40px; }
+  .page-title { font-size: 1.5rem; }
+}
+
+/* ===== Print / PDF Export ===== */
+@media print {
+  nav, .ke-stripe, .btn, button, footer { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .card { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+  .page-wrap { max-width: 100% !important; padding: 0 !important; }
+  .page-title { font-size: 1.4rem !important; }
+  #score-report, #analytics-report { break-inside: avoid; }
+  svg { max-width: 100% !important; }
+  table { font-size: 0.8rem !important; }
 }

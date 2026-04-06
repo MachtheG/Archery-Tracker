@@ -10,6 +10,8 @@ export type User = {
   category: string;
 };
 
+type StoredUser = User & { password: string };
+
 type AuthContextType = {
   user: User | null;
   loading: boolean;
@@ -26,66 +28,111 @@ export function useAuth() {
   return ctx;
 }
 
+// Simple localStorage user registry
+function getUserRegistry(): StoredUser[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("archery_users_registry");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveUserRegistry(users: StoredUser[]) {
+  localStorage.setItem("archery_users_registry", JSON.stringify(users));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Optionally: load user from localStorage/session
+    // Load current session from localStorage
     const stored = localStorage.getItem("archery_user");
     if (stored) {
-      const parsed = JSON.parse(stored);
-      if (
-        parsed &&
-        typeof parsed.id === "string" &&
-        typeof parsed.name === "string" &&
-        typeof parsed.email === "string" &&
-        (parsed.role === "archer" || parsed.role === "coach" || parsed.role === "admin")
-      ) {
-        setUser(parsed as User);
-      } else {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.id && parsed.name && parsed.email && parsed.role) {
+          setUser(parsed as User);
+        }
+      } catch {
         setUser(null);
       }
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
-    // TODO: Replace with real API call
-    await new Promise(r => setTimeout(r, 700));
-    if (email === "coach@archery.com" && password === "coach") {
-      const u: User = {
-          id: "2", name: "Coach", email, role: "coach",
-          club: "",
-          category: ""
+    // Small delay to simulate network
+    await new Promise(r => setTimeout(r, 400));
+
+    const registry = getUserRegistry();
+    const found = registry.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+
+    if (found) {
+      const sessionUser: User = {
+        id: found.id,
+        name: found.name,
+        email: found.email,
+        role: found.role,
+        club: found.club,
+        category: found.category,
       };
-      setUser(u);
-      localStorage.setItem("archery_user", JSON.stringify(u));
+      setUser(sessionUser);
+      localStorage.setItem("archery_user", JSON.stringify(sessionUser));
       setLoading(false);
       return true;
     }
-    if (email === "archer@archery.com" && password === "archer") {
-      const u: User = {
-          id: "1", name: "Archer", email, role: "archer",
-          club: "",
-          category: ""
-      };
-      setUser(u);
-      localStorage.setItem("archery_user", JSON.stringify(u));
-      setLoading(false);
-      return true;
-    }
+
     setLoading(false);
     return false;
   };
 
-  const signup = async (name: string, email: string, password: string, role: string, club: string, category: string) => {
+  const signup = async (
+    name: string,
+    email: string,
+    password: string,
+    role: string,
+    club: string,
+    category: string
+  ): Promise<boolean> => {
     setLoading(true);
-    // TODO: Replace with real API call
-    await new Promise(r => setTimeout(r, 700));
-    const u: User = { id: Date.now().toString(), name, email, role, club, category };
-    setUser(u);
-    localStorage.setItem("archery_user", JSON.stringify(u));
+    await new Promise(r => setTimeout(r, 400));
+
+    const registry = getUserRegistry();
+
+    // Check if email already registered
+    if (registry.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+      setLoading(false);
+      return false;
+    }
+
+    const newUser: StoredUser = {
+      id: Date.now().toString(),
+      name,
+      email,
+      password,
+      role: role || "archer",
+      club,
+      category,
+    };
+
+    registry.push(newUser);
+    saveUserRegistry(registry);
+
+    const sessionUser: User = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      club: newUser.club,
+      category: newUser.category,
+    };
+    setUser(sessionUser);
+    localStorage.setItem("archery_user", JSON.stringify(sessionUser));
     setLoading(false);
     return true;
   };

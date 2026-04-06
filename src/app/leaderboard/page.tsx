@@ -9,7 +9,10 @@ const initialResults: Result[] = [
   { id: 2, archer: "Samuel Kiptoo", score: 670, event: "Nairobi Open", date: "2026-02-18" },
   { id: 3, archer: "Amina Hassan", score: 665, event: "Nairobi Open", date: "2026-02-18" },
   { id: 4, archer: "Brian Otieno", score: 640, event: "Nairobi Open", date: "2026-02-18" },
+  { id: 5, archer: "Grace Njeri", score: 635, event: "Mombasa Classic", date: "2026-03-01" },
 ];
+
+const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -19,10 +22,12 @@ export default function Leaderboard() {
   const [event, setEvent] = useState("");
   const [error, setError] = useState("");
 
+  const canPost = user?.role === "coach" || user?.role === "admin";
+
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!archer.trim() || !score.trim() || !event.trim() || isNaN(Number(score))) {
-      setError("All fields required, score must be a number");
+      setError("All fields required. Score must be a number.");
       return;
     }
     setResults([
@@ -35,50 +40,69 @@ export default function Leaderboard() {
     setError("");
   };
 
-  // Sort and highlight top 3
   const sorted = [...results].sort((a, b) => b.score - a.score);
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 700, margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', fontWeight: 800 }}>Leaderboard</h1>
-      {user?.role === "coach" ? (
-        <form onSubmit={handlePost} style={{ margin: '2rem 0', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'center' }}>
-          <input value={archer} onChange={e => setArcher(e.target.value)} placeholder="Archer Name" style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 16, minWidth: 120 }} />
-          <input value={score} onChange={e => setScore(e.target.value)} placeholder="Score" style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 16, minWidth: 80 }} />
-          <input value={event} onChange={e => setEvent(e.target.value)} placeholder="Event" style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', fontSize: 16, minWidth: 120 }} />
-          <button type="submit" style={{ background: '#FFD700', color: '#000', border: 'none', borderRadius: 6, padding: '0.7em 1.5em', fontWeight: 700, cursor: 'pointer' }}>Post Result</button>
-          {error && <div style={{ color: '#d32f2f', fontWeight: 600, width: '100%' }}>{error}</div>}
-        </form>
-      ) : user ? (
-        <div style={{ textAlign: 'center', margin: '2rem 0', color: '#888' }}>Only coaches can post results.</div>
-      ) : (
-        <div style={{ textAlign: 'center', margin: '2rem 0', color: '#888' }}>Log in to view and post results.</div>
+    <div className="page-wrap">
+      <h1 className="page-title">Leaderboard</h1>
+      <p className="page-subtitle">Top archery scores across Kenya</p>
+
+      {/* Post form — Coach & Admin only */}
+      {canPost && (
+        <div className="card" style={{ marginBottom: 28 }}>
+          <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 14 }}>Post a Result</h2>
+          <form onSubmit={handlePost} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+            <div style={{ flex: "1 1 140px" }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Archer</label>
+              <input className="input" value={archer} onChange={e => setArcher(e.target.value)} placeholder="Name" />
+            </div>
+            <div style={{ flex: "0 1 100px" }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Score</label>
+              <input className="input" value={score} onChange={e => setScore(e.target.value)} placeholder="720" />
+            </div>
+            <div style={{ flex: "1 1 140px" }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Event</label>
+              <input className="input" value={event} onChange={e => setEvent(e.target.value)} placeholder="Competition name" />
+            </div>
+            <button type="submit" className="btn btn-gold">Post Result</button>
+          </form>
+          {error && <div className="error-text" style={{ marginTop: 8 }}>{error}</div>}
+        </div>
       )}
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Top Archers</h2>
-        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, boxShadow: '0 2px 12px #0001', marginBottom: 24 }}>
+
+      {!user && <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>Log in to see full leaderboard features.</p>}
+      {user && !canPost && <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: "0.9rem" }}>Only coaches and admins can post results.</p>}
+
+      {/* Leaderboard table */}
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ background: '#006600', color: '#fff' }}>
-              <th style={{ padding: 12 }}>Rank</th>
-              <th style={{ padding: 12 }}>Archer</th>
-              <th style={{ padding: 12 }}>Score</th>
-              <th style={{ padding: 12 }}>Event</th>
-              <th style={{ padding: 12 }}>Date</th>
+            <tr style={{ background: "var(--ke-black)", color: "var(--ke-white)" }}>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>#</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>Archer</th>
+              <th style={{ padding: "12px 16px", textAlign: "center", fontWeight: 600, fontSize: "0.85rem" }}>Score</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>Event</th>
+              <th style={{ padding: "12px 16px", textAlign: "right", fontWeight: 600, fontSize: "0.85rem" }}>Date</th>
             </tr>
           </thead>
           <tbody>
-            {sorted.slice(0, 10).map((r, i) => (
-              <tr key={r.id} style={{ background: i < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][i] : undefined, fontWeight: i < 3 ? 700 : 400 }}>
-                <td style={{ padding: 12 }}>{i + 1}</td>
-                <td style={{ padding: 12 }}>{r.archer}</td>
-                <td style={{ padding: 12 }}>{r.score}</td>
-                <td style={{ padding: 12 }}>{r.event}</td>
-                <td style={{ padding: 12 }}>{r.date}</td>
+            {sorted.slice(0, 15).map((r, i) => (
+              <tr key={r.id} style={{
+                borderBottom: "1px solid var(--border-light)",
+                background: i < 3 ? "rgba(212,160,23,0.06)" : undefined,
+              }}>
+                <td style={{ padding: "12px 16px", fontWeight: i < 3 ? 800 : 500 }}>
+                  {i < 3 ? MEDALS[i] : i + 1}
+                </td>
+                <td style={{ padding: "12px 16px", fontWeight: i < 3 ? 700 : 400 }}>{r.archer}</td>
+                <td style={{ padding: "12px 16px", textAlign: "center", fontWeight: 700, color: "var(--ke-green)" }}>{r.score}</td>
+                <td style={{ padding: "12px 16px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>{r.event}</td>
+                <td style={{ padding: "12px 16px", textAlign: "right", fontSize: "0.85rem", color: "var(--text-muted)" }}>{r.date}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </main>
+    </div>
   );
 }
