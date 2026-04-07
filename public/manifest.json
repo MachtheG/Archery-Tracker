@@ -1,0 +1,26 @@
+{
+  "name": "Archery Kenya",
+  "short_name": "Archery KE",
+  "description": "Kenya's archery performance tracking app. Log scores, track equipment, analyse performance, and stay connected with the archery community.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF7",
+  "theme_color": "#006B3F",
+  "categories": ["sports", "fitness"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
