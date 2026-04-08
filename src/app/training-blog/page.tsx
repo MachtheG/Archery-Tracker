@@ -11,12 +11,12 @@ const initialRoutines: Routine[] = [
 ];
 
 export default function TrainingBlog() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [routines, setRoutines] = useState<Routine[]>(initialRoutines);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
 
-  const canPost = user?.role === "coach" || user?.role === "admin";
+  const canPost = hasRole("coach") || hasRole("admin");
 
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();

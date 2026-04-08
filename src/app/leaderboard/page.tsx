@@ -15,14 +15,14 @@ const initialResults: Result[] = [
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default function Leaderboard() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [results, setResults] = useState<Result[]>(initialResults);
   const [archer, setArcher] = useState("");
   const [score, setScore] = useState("");
   const [event, setEvent] = useState("");
   const [error, setError] = useState("");
 
-  const canPost = user?.role === "coach" || user?.role === "admin";
+  const canPost = hasRole("coach") || hasRole("admin");
 
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();

@@ -5,7 +5,8 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  roles: string[];   // supports multiple roles, e.g. ["archer", "coach"]
+  role: string;       // primary role (first in array) — kept for backward compat
   club: string;
   category: string;
 };
@@ -16,8 +17,9 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string, role: string, club: string, category: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string, roles: string[], club: string, category: string) => Promise<boolean>;
   logout: () => void;
+  hasRole: (role: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,17 +45,28 @@ function saveUserRegistry(users: StoredUser[]) {
   localStorage.setItem("archery_users_registry", JSON.stringify(users));
 }
 
+// Admin invite code — simple secret phrase required to register as admin
+const ADMIN_INVITE_CODE = "ARCHERYKE-ADMIN-2026";
+
+export function validateAdminCode(code: string): boolean {
+  return code.trim().toUpperCase() === ADMIN_INVITE_CODE;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load current session from localStorage
     const stored = localStorage.getItem("archery_user");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        if (parsed && parsed.id && parsed.name && parsed.email && parsed.role) {
+        if (parsed && parsed.id && parsed.name && parsed.email) {
+          // Migrate old single-role to multi-role
+          if (!parsed.roles) {
+            parsed.roles = [parsed.role || "archer"];
+          }
+          parsed.role = parsed.roles[0];
           setUser(parsed as User);
         }
       } catch {
@@ -64,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
-    // Small delay to simulate network
     await new Promise(r => setTimeout(r, 400));
 
     const registry = getUserRegistry();
@@ -73,11 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     if (found) {
+      // Migrate old users without roles array
+      if (!found.roles) {
+        found.roles = [found.role || "archer"];
+      }
       const sessionUser: User = {
         id: found.id,
         name: found.name,
         email: found.email,
-        role: found.role,
+        roles: found.roles,
+        role: found.roles[0],
         club: found.club,
         category: found.category,
       };
@@ -95,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: string,
     email: string,
     password: string,
-    role: string,
+    roles: string[],
     club: string,
     category: string
   ): Promise<boolean> => {
@@ -104,18 +121,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const registry = getUserRegistry();
 
-    // Check if email already registered
     if (registry.find(u => u.email.toLowerCase() === email.toLowerCase())) {
       setLoading(false);
       return false;
     }
+
+    // Ensure at least one role
+    if (roles.length === 0) roles = ["archer"];
 
     const newUser: StoredUser = {
       id: Date.now().toString(),
       name,
       email,
       password,
-      role: role || "archer",
+      roles,
+      role: roles[0],
       club,
       category,
     };
@@ -127,7 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: newUser.id,
       name: newUser.name,
       email: newUser.email,
-      role: newUser.role,
+      roles: newUser.roles,
+      role: newUser.roles[0],
       club: newUser.club,
       category: newUser.category,
     };
@@ -142,8 +163,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("archery_user");
   };
 
+  const hasRole = (role: string): boolean => {
+    if (!user) return false;
+    return user.roles.includes(role);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

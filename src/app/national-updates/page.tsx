@@ -11,12 +11,12 @@ const initialUpdates: Update[] = [
 ];
 
 export default function NationalUpdates() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [updates, setUpdates] = useState<Update[]>(initialUpdates);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
 
-  const canPost = user?.role === "coach" || user?.role === "admin";
+  const canPost = hasRole("coach") || hasRole("admin");
 
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();

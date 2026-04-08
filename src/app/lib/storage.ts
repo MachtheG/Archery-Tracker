@@ -59,10 +59,43 @@ export type TuningEntry = {
   notes: string;
 };
 
-// ===== localStorage Keys =====
-const SESSIONS_KEY = "archery_score_sessions";
-const EQUIPMENT_KEY = "archery_equipment_sets";
-const TUNING_KEY = "archery_tuning_entries";
+// ===== Marketplace Store Listing =====
+export type StoreListing = {
+  id: string;
+  name: string;
+  description: string;
+  priceKES: number;
+  condition: "new" | "like-new" | "used" | "well-used";
+  category: string;
+  sellerName: string;
+  sellerEmail: string;
+  sellerId: string;
+  listedAt: string;
+  sold: boolean;
+  imageEmoji?: string;
+};
+
+// ===== User-scoped storage keys =====
+// All data is now keyed by userId to prevent data leaking between accounts.
+function userKey(base: string, userId?: string): string {
+  if (!userId) {
+    // try to read current user from session storage
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("archery_user");
+        if (raw) {
+          const u = JSON.parse(raw);
+          if (u?.id) return `${base}_${u.id}`;
+        }
+      } catch { /* fallback */ }
+    }
+    return base; // fallback (shouldn't happen)
+  }
+  return `${base}_${userId}`;
+}
+
+// Global (shared) keys
+const STORE_KEY = "archery_store_listings";
 
 // ===== Helpers =====
 function getJSON<T>(key: string, fallback: T): T {
@@ -79,123 +112,113 @@ function setJSON<T>(key: string, data: T): void {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-// ===== Score Sessions =====
-export function getSessions(): ScoreSession[] {
-  const sessions = getJSON<ScoreSession[]>(SESSIONS_KEY, []);
-  // If empty, seed with sample data
-  if (sessions.length === 0) {
-    const seeded = generateSeedSessions();
-    setJSON(SESSIONS_KEY, seeded);
-    return seeded;
-  }
-  return sessions;
+// ===== Score Sessions (user-scoped) =====
+export function getSessions(userId?: string): ScoreSession[] {
+  return getJSON<ScoreSession[]>(userKey("archery_sessions", userId), []);
 }
 
-export function saveSession(session: ScoreSession): void {
-  const sessions = getJSON<ScoreSession[]>(SESSIONS_KEY, []);
+export function saveSession(session: ScoreSession, userId?: string): void {
+  const key = userKey("archery_sessions", userId);
+  const sessions = getJSON<ScoreSession[]>(key, []);
   sessions.unshift(session);
-  setJSON(SESSIONS_KEY, sessions);
+  setJSON(key, sessions);
 }
 
-export function deleteSession(id: string): void {
-  const sessions = getJSON<ScoreSession[]>(SESSIONS_KEY, []);
-  setJSON(SESSIONS_KEY, sessions.filter(s => s.id !== id));
+export function deleteSession(id: string, userId?: string): void {
+  const key = userKey("archery_sessions", userId);
+  const sessions = getJSON<ScoreSession[]>(key, []);
+  setJSON(key, sessions.filter(s => s.id !== id));
 }
 
-// ===== Equipment =====
-export function getEquipmentList(): Equipment[] {
-  return getJSON<Equipment[]>(EQUIPMENT_KEY, []);
+// ===== Equipment (user-scoped) =====
+export function getEquipmentList(userId?: string): Equipment[] {
+  return getJSON<Equipment[]>(userKey("archery_equipment", userId), []);
 }
 
-export function saveEquipment(eq: Equipment): void {
-  const list = getJSON<Equipment[]>(EQUIPMENT_KEY, []);
+export function saveEquipment(eq: Equipment, userId?: string): void {
+  const key = userKey("archery_equipment", userId);
+  const list = getJSON<Equipment[]>(key, []);
   const idx = list.findIndex(e => e.id === eq.id);
   if (idx >= 0) {
     list[idx] = eq;
   } else {
     list.push(eq);
   }
-  setJSON(EQUIPMENT_KEY, list);
+  setJSON(key, list);
 }
 
-export function deleteEquipment(id: string): void {
-  const list = getJSON<Equipment[]>(EQUIPMENT_KEY, []);
-  setJSON(EQUIPMENT_KEY, list.filter(e => e.id !== id));
+export function deleteEquipment(id: string, userId?: string): void {
+  const key = userKey("archery_equipment", userId);
+  const list = getJSON<Equipment[]>(key, []);
+  setJSON(key, list.filter(e => e.id !== id));
 }
 
-// ===== Tuning History =====
-export function getTuningEntries(equipmentId?: string): TuningEntry[] {
-  const entries = getJSON<TuningEntry[]>(TUNING_KEY, []);
+// ===== Tuning History (user-scoped) =====
+export function getTuningEntries(equipmentId?: string, userId?: string): TuningEntry[] {
+  const entries = getJSON<TuningEntry[]>(userKey("archery_tuning", userId), []);
   if (equipmentId) return entries.filter(e => e.equipmentId === equipmentId);
   return entries;
 }
 
-export function saveTuningEntry(entry: TuningEntry): void {
-  const entries = getJSON<TuningEntry[]>(TUNING_KEY, []);
+export function saveTuningEntry(entry: TuningEntry, userId?: string): void {
+  const key = userKey("archery_tuning", userId);
+  const entries = getJSON<TuningEntry[]>(key, []);
   entries.unshift(entry);
-  setJSON(TUNING_KEY, entries);
+  setJSON(key, entries);
 }
 
-// ===== Seed Data =====
-function generateSeedSessions(): ScoreSession[] {
-  const sessions: ScoreSession[] = [];
-  const distances = [18, 50, 70];
-  const roundNames: Record<number, string> = { 18: "WA 18m Indoor", 50: "WA 50m", 70: "WA 70m" };
-  const faces: Record<number, string> = { 18: "40cm", 50: "80cm", 70: "122cm" };
+// ===== Store Listings (global/shared) =====
+function getDefaultListings(): StoreListing[] {
+  return [
+    { id: "default-1", name: "Hoyt Altus Compound Bow", description: "Brand new, 2025 model. 50lb draw weight.", priceKES: 185000, condition: "new", category: "Bows", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
+    { id: "default-2", name: "Easton X10 Arrows (Dozen)", description: "Competition-grade carbon arrows. Spine 600.", priceKES: 95000, condition: "new", category: "Arrows", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
+    { id: "default-3", name: "Shibuya Ultima Recurve Sight", description: "Premium recurve sight with micro-click adjustment.", priceKES: 42000, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🎯" },
+    { id: "default-4", name: "Avalon Classic Barebow Tab", description: "Leather barebow shooting tab, medium size.", priceKES: 3500, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
+    { id: "default-5", name: "Cartel Midas Bow Stand", description: "Lightweight aluminium bow stand.", priceKES: 2500, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
+    { id: "default-6", name: "Win & Win WIAWIS Limbs", description: "Carbon/foam limbs, 36lb medium.", priceKES: 78000, condition: "new", category: "Limbs", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
+    { id: "default-7", name: "BCY 8125G Bow String", description: "High-performance bowstring material.", priceKES: 4500, condition: "new", category: "Strings", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
+    { id: "default-8", name: "Beiter Plunger Button", description: "Competition plunger button with micro-adjustment.", priceKES: 12000, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🎯" },
+  ];
+}
 
-  // Generate 12 sample sessions over the past 3 months
-  for (let i = 0; i < 12; i++) {
-    const daysAgo = Math.floor(i * 7 + Math.random() * 5);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    const dist = distances[i % 3];
-    const arrowsPerEnd = dist === 18 ? 3 : 6;
-    const totalEnds = dist === 18 ? 20 : 12;
-    const baseAvg = dist === 70 ? 7.5 : dist === 50 ? 8.0 : 8.5;
-    const improvement = (12 - i) * 0.05; // slight improvement over time
-
-    const ends: End[] = [];
-    let totalScore = 0;
-    let xCount = 0;
-    let tenCount = 0;
-
-    for (let e = 0; e < totalEnds; e++) {
-      const arrows: ArrowScore[] = [];
-      for (let a = 0; a < arrowsPerEnd; a++) {
-        const val = Math.min(10, Math.max(0, Math.round(baseAvg + improvement + (Math.random() - 0.5) * 4)));
-        const isX = val === 10 && Math.random() > 0.7;
-        arrows.push({ value: val, isX });
-        totalScore += val;
-        if (isX) xCount++;
-        if (val === 10) tenCount++;
-      }
-      ends.push({ arrows });
-    }
-
-    sessions.push({
-      id: `seed-${i}`,
-      date: date.toISOString().slice(0, 10),
-      roundId: `wa-${dist}m`,
-      roundName: roundNames[dist],
-      distance: dist,
-      targetFace: faces[dist],
-      ends,
-      totalScore,
-      xCount,
-      tenCount,
-      weather: {
-        temperature: 20 + Math.round(Math.random() * 10),
-        windSpeed: Math.round(Math.random() * 20),
-        windDirection: Math.round(Math.random() * 360),
-        humidity: 40 + Math.round(Math.random() * 40),
-        conditions: ["Clear sky", "Partly cloudy", "Overcast"][Math.floor(Math.random() * 3)],
-        isManual: false,
-      },
-      notes: "",
-    });
+export function getStoreListings(): StoreListing[] {
+  const listings = getJSON<StoreListing[]>(STORE_KEY, []);
+  if (listings.length === 0) {
+    const defaults = getDefaultListings();
+    setJSON(STORE_KEY, defaults);
+    return defaults;
   }
+  return listings.filter(l => !l.sold);
+}
 
-  return sessions.sort((a, b) => b.date.localeCompare(a.date));
+export function getAllStoreListings(): StoreListing[] {
+  const listings = getJSON<StoreListing[]>(STORE_KEY, []);
+  if (listings.length === 0) {
+    const defaults = getDefaultListings();
+    setJSON(STORE_KEY, defaults);
+    return defaults;
+  }
+  return listings;
+}
+
+export function addStoreListing(listing: StoreListing): void {
+  const listings = getJSON<StoreListing[]>(STORE_KEY, []);
+  listings.unshift(listing);
+  setJSON(STORE_KEY, listings);
+}
+
+export function markListingSold(id: string): void {
+  const listings = getJSON<StoreListing[]>(STORE_KEY, []);
+  const idx = listings.findIndex(l => l.id === id);
+  if (idx >= 0) {
+    listings[idx].sold = true;
+    setJSON(STORE_KEY, listings);
+  }
+}
+
+export function removeStoreListing(id: string): void {
+  const listings = getJSON<StoreListing[]>(STORE_KEY, []);
+  setJSON(STORE_KEY, listings.filter(l => l.id !== id));
 }
 
 // ===== Computed Stats =====

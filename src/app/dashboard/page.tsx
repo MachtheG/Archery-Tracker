@@ -10,8 +10,8 @@ function RoleBadge({ role }: { role: string }) {
   return <span className={`badge ${cls}`}>{role}</span>;
 }
 
-// ── Archer Dashboard ──
-function ArcherDashboard() {
+// ── Archer Stats & Actions ──
+function ArcherSection() {
   const [sessions, setSessions] = useState<ScoreSession[]>([]);
   const [eqCount, setEqCount] = useState(0);
 
@@ -42,15 +42,17 @@ function ArcherDashboard() {
         ))}
       </div>
 
-      {/* Quick actions */}
+      {/* Archer actions */}
+      <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>🎯 Archer Tools</h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14, marginBottom: 28 }}>
         {[
-          { icon: "🎯", label: "New Score Session", href: "/score-session", desc: "Log arrows on a digital scorecard", color: "var(--ke-green)" },
-          { icon: "📊", label: "View Analytics", href: "/analytics", desc: "Charts, trends, and patterns", color: "var(--ke-gold)" },
-          { icon: "🏹", label: "My Equipment", href: "/equipment", desc: "Virtual Quiver & tuning log", color: "var(--ke-red)" },
-          { icon: "🏆", label: "Leaderboard", href: "/leaderboard", desc: "See top archers", color: "var(--ke-black)" },
+          { icon: "🎯", label: "New Score Session", href: "/score-session", desc: "Log arrows on a digital scorecard" },
+          { icon: "📊", label: "View Analytics", href: "/analytics", desc: "Charts, trends, and patterns" },
+          { icon: "🏹", label: "My Equipment", href: "/equipment", desc: "Virtual Quiver & tuning log" },
+          { icon: "🏆", label: "Leaderboard", href: "/leaderboard", desc: "See top archers" },
+          { icon: "🏷️", label: "Sell Equipment", href: "/store", desc: "List items for sale" },
         ].map(item => (
-          <Link key={item.href} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
+          <Link key={item.href + item.label} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
             <div style={{ fontSize: "2rem", marginBottom: 8 }}>{item.icon}</div>
             <div style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: 4 }}>{item.label}</div>
             <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{item.desc}</div>
@@ -60,7 +62,7 @@ function ArcherDashboard() {
 
       {/* Recent sessions */}
       {sessions.length > 0 && (
-        <div className="card" style={{ padding: 0, overflow: "auto" }}>
+        <div className="card" style={{ padding: 0, overflow: "auto", marginBottom: 28 }}>
           <div style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2 style={{ fontSize: "1rem", fontWeight: 700 }}>Recent Sessions</h2>
             <Link href="/analytics" style={{ fontSize: "0.85rem", color: "var(--ke-green)", fontWeight: 600 }}>View all →</Link>
@@ -94,18 +96,16 @@ function ArcherDashboard() {
   );
 }
 
-// ── Coach Dashboard ──
-function CoachDashboard() {
+// ── Coach Actions ──
+function CoachSection() {
   return (
     <>
+      <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>📋 Coach Tools</h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14, marginBottom: 28 }}>
         {[
-          { icon: "🎯", label: "Score a Session", href: "/score-session", desc: "Log practice or competition" },
           { icon: "🏹", label: "Post Training Routines", href: "/training-blog", desc: "Share drills with archers" },
           { icon: "📰", label: "Post National Updates", href: "/national-updates", desc: "Announce events" },
           { icon: "📊", label: "Update Leaderboard", href: "/leaderboard", desc: "Post competition results" },
-          { icon: "📈", label: "My Analytics", href: "/analytics", desc: "View performance data" },
-          { icon: "🏹", label: "My Equipment", href: "/equipment", desc: "Virtual Quiver" },
         ].map(item => (
           <Link key={item.label} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
             <div style={{ fontSize: "2rem", marginBottom: 8 }}>{item.icon}</div>
@@ -118,18 +118,17 @@ function CoachDashboard() {
   );
 }
 
-// ── Admin Dashboard ──
-function AdminDashboard() {
+// ── Admin Actions ──
+function AdminSection() {
   return (
     <>
+      <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>🔐 Admin Tools</h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14, marginBottom: 28 }}>
         {[
           { icon: "📊", label: "Manage Leaderboard", href: "/leaderboard", desc: "Post & manage results" },
           { icon: "📰", label: "National Updates", href: "/national-updates", desc: "Post announcements" },
           { icon: "🏹", label: "Training Blog", href: "/training-blog", desc: "Share routines" },
-          { icon: "🎯", label: "Score a Session", href: "/score-session", desc: "Log a session" },
-          { icon: "📈", label: "Analytics", href: "/analytics", desc: "View data & charts" },
-          { icon: "🛒", label: "Store", href: "/store", desc: "View products" },
+          { icon: "🛒", label: "Store Management", href: "/store", desc: "View marketplace" },
         ].map(item => (
           <Link key={item.label} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
             <div style={{ fontSize: "2rem", marginBottom: 8 }}>{item.icon}</div>
@@ -143,7 +142,7 @@ function AdminDashboard() {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
 
   if (!user) {
     return (
@@ -157,18 +156,19 @@ export default function Dashboard() {
 
   return (
     <div className="page-wrap">
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
         <h1 className="page-title" style={{ marginBottom: 0 }}>Dashboard</h1>
-        <RoleBadge role={user.role} />
+        {user.roles.map(r => <RoleBadge key={r} role={r} />)}
       </div>
       <p className="page-subtitle">
         Welcome back, <strong>{user.name}</strong>
         {user.club ? ` — ${user.club}` : ""}
       </p>
 
-      {user.role === "archer" && <ArcherDashboard />}
-      {user.role === "coach" && <CoachDashboard />}
-      {user.role === "admin" && <AdminDashboard />}
+      {/* Show sections based on ALL roles the user has */}
+      {hasRole("archer") && <ArcherSection />}
+      {hasRole("coach") && <CoachSection />}
+      {hasRole("admin") && <AdminSection />}
     </div>
   );
 }

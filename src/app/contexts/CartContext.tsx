@@ -33,6 +33,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const found = prev.find((i) => i.id === item.id);
       if (found) {
+        // For marketplace items (unique), don't increase quantity
+        if (item.id.startsWith("user-") || item.id.startsWith("default-")) {
+          return prev; // already in cart
+        }
         return prev.map((i) =>
           i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
         );
