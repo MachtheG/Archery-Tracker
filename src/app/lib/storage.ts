@@ -72,6 +72,7 @@ export type StoreListing = {
   sellerId: string;
   listedAt: string;
   sold: boolean;
+  imageUrl?: string;
   imageEmoji?: string;
 };
 
@@ -170,14 +171,14 @@ export function saveTuningEntry(entry: TuningEntry, userId?: string): void {
 // ===== Store Listings (global/shared) =====
 function getDefaultListings(): StoreListing[] {
   return [
-    { id: "default-1", name: "Hoyt Altus Compound Bow", description: "Brand new, 2025 model. 50lb draw weight.", priceKES: 185000, condition: "new", category: "Bows", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
-    { id: "default-2", name: "Easton X10 Arrows (Dozen)", description: "Competition-grade carbon arrows. Spine 600.", priceKES: 95000, condition: "new", category: "Arrows", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
-    { id: "default-3", name: "Shibuya Ultima Recurve Sight", description: "Premium recurve sight with micro-click adjustment.", priceKES: 42000, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🎯" },
-    { id: "default-4", name: "Avalon Classic Barebow Tab", description: "Leather barebow shooting tab, medium size.", priceKES: 3500, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
-    { id: "default-5", name: "Cartel Midas Bow Stand", description: "Lightweight aluminium bow stand.", priceKES: 2500, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
-    { id: "default-6", name: "Win & Win WIAWIS Limbs", description: "Carbon/foam limbs, 36lb medium.", priceKES: 78000, condition: "new", category: "Limbs", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
-    { id: "default-7", name: "BCY 8125G Bow String", description: "High-performance bowstring material.", priceKES: 4500, condition: "new", category: "Strings", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🏹" },
-    { id: "default-8", name: "Beiter Plunger Button", description: "Competition plunger button with micro-adjustment.", priceKES: 12000, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageEmoji: "🎯" },
+    { id: "default-1", name: "Hoyt Altus Compound Bow", description: "Brand new, 2025 model. 50lb draw weight.", priceKES: 185000, condition: "new", category: "Bows", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/compound_bow.png" },
+    { id: "default-2", name: "Easton X10 Arrows (Dozen)", description: "Competition-grade carbon arrows. Spine 600.", priceKES: 95000, condition: "new", category: "Arrows", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/carbon_arrows.png" },
+    { id: "default-3", name: "Shibuya Ultima Recurve Sight", description: "Premium recurve sight with micro-click adjustment.", priceKES: 42000, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/recurve_sight.png" },
+    { id: "default-4", name: "Avalon Classic Barebow Tab", description: "Leather barebow shooting tab, medium size.", priceKES: 3500, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/barebow_tab.png" },
+    { id: "default-5", name: "Cartel Midas Bow Stand", description: "Lightweight aluminium bow stand.", priceKES: 2500, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/bow_stand.png" },
+    { id: "default-6", name: "Win & Win WIAWIS Limbs", description: "Carbon/foam limbs, 36lb medium.", priceKES: 78000, condition: "new", category: "Limbs", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/recurve_limbs.png" },
+    { id: "default-7", name: "BCY 8125G Bow String", description: "High-performance bowstring material.", priceKES: 4500, condition: "new", category: "Strings", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/bow_string.png" },
+    { id: "default-8", name: "Beiter Plunger Button", description: "Competition plunger button with micro-adjustment.", priceKES: 12000, condition: "new", category: "Accessories", sellerName: "Archery KE Store", sellerEmail: "store@archeryke.co.ke", sellerId: "system", listedAt: "2025-01-01", sold: false, imageUrl: "/products/plunger_button.png" },
   ];
 }
 

@@ -1,10 +1,10 @@
 // ===== Official World Archery Target Colors (Pantone) =====
-const WA_GOLD   = "#FFD200"; // Pantone 107
-const WA_RED    = "#ED1C24"; // Pantone 032
-const WA_BLUE   = "#00AEEF"; // Pantone 306
+const WA_GOLD   = "#FFE552"; // Pantone 107
+const WA_RED    = "#F65058"; // Pantone 032
+const WA_BLUE   = "#00B4E4"; // Pantone 306
 const WA_BLACK  = "#000000";
 const WA_WHITE  = "#FFFFFF";
-const FIELD_YELLOW = "#FFD200";
+const FIELD_YELLOW = "#FFE552";
 const FIELD_BLACK  = "#1A1A1A";
 
 // ===== Target Face Configurations =====

@@ -14,6 +14,7 @@ export default function Signup() {
   const [club, setClub] = useState("");
   const [category, setCategory] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const toggleRole = (role: string) => {
     setSelectedRoles(prev => {
@@ -35,9 +36,9 @@ export default function Signup() {
     }
     const ok = await signup(name, email, password, selectedRoles, club, category);
     if (ok) {
-      router.push("/dashboard");
+      setSuccess(true);
     } else {
-      setError("An account with this email already exists.");
+      setError("An account with this email already exists or there was an error.");
     }
   };
 
@@ -56,15 +57,35 @@ export default function Signup() {
       background: "var(--bg-primary)",
     }}>
       <div style={{ width: "100%", maxWidth: 480 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <h1 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: 6 }}>Create your account</h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>Join Archery Kenya today</p>
-        </div>
-        <form onSubmit={handleSubmit} className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <label style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: 6, display: "block" }}>Full Name</label>
-            <input type="text" className="input" placeholder="John Kamau" required value={name} onChange={e => setName(e.target.value)} />
+        {success ? (
+          <div className="card" style={{ textAlign: "center", padding: "40px 24px" }}>
+            <div style={{ fontSize: "3rem", marginBottom: 12 }}>✉️</div>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, marginBottom: 12 }}>Check Your Email</h2>
+            <p style={{ color: "var(--text-secondary)", marginBottom: 20 }}>
+              We've sent a verification link to <strong>{email}</strong>. Please click the link to verify your account and complete registration.
+            </p>
+            <Link href="/login" className="btn btn-outline" style={{ display: "inline-block" }}>
+              Return to Login
+            </Link>
           </div>
+        ) : (
+          <>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <h1 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: 6 }}>Create your account</h1>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>Join Archery Kenya today</p>
+            </div>
+            
+            <button type="button" className="btn btn-outline" style={{ width: "100%", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: 18, height: 18 }} />
+              Sign up with Google
+            </button>
+            <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 16 }}>— OR —</div>
+
+            <form onSubmit={handleSubmit} className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: 6, display: "block" }}>Full Name</label>
+                <input type="text" className="input" placeholder="John Kamau" required value={name} onChange={e => setName(e.target.value)} />
+              </div>
           <div>
             <label style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: 6, display: "block" }}>Email</label>
             <input type="email" className="input" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)} />
@@ -135,6 +156,8 @@ export default function Signup() {
             Admin access? <Link href="/admin/register" style={{ color: "var(--ke-gold)", fontWeight: 600 }}>Register as Admin →</Link>
           </div>
         </form>
+        </>
+        )}
       </div>
     </main>
   );

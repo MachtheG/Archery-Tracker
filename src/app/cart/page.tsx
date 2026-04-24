@@ -20,33 +20,56 @@ export default function Cart() {
     setCheckoutStep("checkout");
   };
 
-  const handleConfirmPurchase = () => {
+  const handleConfirmPurchase = async () => {
     if (!user) return;
 
     const allListings = getAllStoreListings();
     const confirmed: typeof confirmedItems = [];
+    const sellers: Record<string, any> = {};
 
     // Mark each purchased listing as sold and gather seller info
     items.forEach(item => {
       const listing = allListings.find(l => l.id === item.id);
+      let sellerEmail = "store@archeryke.co.ke";
+      let sellerName = "Archery KE Store";
+
       if (listing) {
         markListingSold(listing.id);
-        confirmed.push({
-          name: listing.name,
-          price: listing.priceKES,
-          sellerEmail: listing.sellerEmail,
-          sellerName: listing.sellerName,
-        });
-      } else {
-        // Non-listing item (shouldn't happen but handle gracefully)
-        confirmed.push({
-          name: item.name,
-          price: item.price,
-          sellerEmail: "store@archeryke.co.ke",
-          sellerName: "Archery KE Store",
-        });
+        sellerEmail = listing.sellerEmail;
+        sellerName = listing.sellerName;
       }
+
+      confirmed.push({
+        name: item.name,
+        price: item.price,
+        sellerEmail,
+        sellerName,
+      });
+
+      if (!sellers[sellerEmail]) {
+        sellers[sellerEmail] = { sellerName, items: [] };
+      }
+      sellers[sellerEmail].items.push({ name: item.name, price: item.price });
     });
+
+    try {
+      await fetch("http://localhost:5000/api/orders/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          buyer: {
+            name: user.name,
+            email: user.email,
+            phone: buyerPhone,
+            notes: buyerNotes
+          },
+          sellers
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to send order emails", err);
+    }
 
     setConfirmedItems(confirmed);
     clearCart();

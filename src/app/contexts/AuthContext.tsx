@@ -77,33 +77,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 400));
-
-    const registry = getUserRegistry();
-    const found = registry.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-
-    if (found) {
-      // Migrate old users without roles array
-      if (!found.roles) {
-        found.roles = [found.role || "archer"];
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const sessionUser: User = {
+          id: data.user.id.toString(),
+          name: data.user.name,
+          email: data.user.email,
+          roles: [data.user.role],
+          role: data.user.role,
+          club: data.user.club,
+          category: data.user.category,
+        };
+        setUser(sessionUser);
+        localStorage.setItem("archery_user", JSON.stringify(sessionUser));
+        localStorage.setItem("archery_token", data.token);
+        setLoading(false);
+        return true;
       }
-      const sessionUser: User = {
-        id: found.id,
-        name: found.name,
-        email: found.email,
-        roles: found.roles,
-        role: found.roles[0],
-        club: found.club,
-        category: found.category,
-      };
-      setUser(sessionUser);
-      localStorage.setItem("archery_user", JSON.stringify(sessionUser));
-      setLoading(false);
-      return true;
+    } catch (err) {
+      console.error(err);
     }
-
     setLoading(false);
     return false;
   };
@@ -117,50 +116,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     category: string
   ): Promise<boolean> => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 400));
-
-    const registry = getUserRegistry();
-
-    if (registry.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-      setLoading(false);
-      return false;
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: roles[0] || "archer",
+          club,
+          category,
+        }),
+      });
+      if (res.ok) {
+        setLoading(false);
+        return true; // We don't log them in, they need to verify email
+      }
+    } catch (err) {
+      console.error(err);
     }
-
-    // Ensure at least one role
-    if (roles.length === 0) roles = ["archer"];
-
-    const newUser: StoredUser = {
-      id: Date.now().toString(),
-      name,
-      email,
-      password,
-      roles,
-      role: roles[0],
-      club,
-      category,
-    };
-
-    registry.push(newUser);
-    saveUserRegistry(registry);
-
-    const sessionUser: User = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      roles: newUser.roles,
-      role: newUser.roles[0],
-      club: newUser.club,
-      category: newUser.category,
-    };
-    setUser(sessionUser);
-    localStorage.setItem("archery_user", JSON.stringify(sessionUser));
     setLoading(false);
-    return true;
+    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("archery_user");
+    localStorage.removeItem("archery_token");
   };
 
   const hasRole = (role: string): boolean => {

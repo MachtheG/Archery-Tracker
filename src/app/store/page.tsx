@@ -196,15 +196,20 @@ export default function Store() {
               <div style={{
                 background: "linear-gradient(135deg, #f5f5f0 0%, #e8e5e0 100%)",
                 borderRadius: "var(--radius-sm)",
-                height: 100,
+                height: 120,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 14,
                 fontSize: "2.5rem",
                 position: "relative",
+                overflow: "hidden",
               }}>
-                {listing.imageEmoji || "🏹"}
+                {listing.imageUrl ? (
+                  <img src={listing.imageUrl} alt={listing.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  listing.imageEmoji || "🏹"
+                )}
                 {/* Condition badge */}
                 <span style={{
                   position: "absolute",
@@ -217,6 +222,7 @@ export default function Store() {
                   background: "var(--bg-card)",
                   color: conditionColor(listing.condition),
                   border: `1px solid ${conditionColor(listing.condition)}`,
+                  zIndex: 2,
                 }}>
                   {conditionLabel(listing.condition)}
                 </span>
