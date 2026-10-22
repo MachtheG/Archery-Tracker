@@ -4,6 +4,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import NavbarWithCart from "./components/NavbarWithCart";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
+import Footer from "./components/Footer";
 
 export const metadata: Metadata = {
   title: "Archery Kenya — Track. Train. Triumph.",
@@ -43,6 +44,7 @@ export default function RootLayout({
             <NavbarWithCart />
             <div className="ke-stripe" />
             {children}
+            <Footer />
           </CartProvider>
         </AuthProvider>
       </body>

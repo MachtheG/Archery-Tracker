@@ -131,6 +131,7 @@ function AdminSection() {
           { icon: "📰", label: "National Updates", href: "/national-updates", desc: "Post announcements" },
           { icon: "🏹", label: "Training Blog", href: "/training-blog", desc: "Share routines" },
           { icon: "🛒", label: "Store Management", href: "/store", desc: "View marketplace" },
+          { icon: "📈", label: "Usage Dashboard", href: "/admin", desc: "Signups, sessions, marketplace stats" },
         ].map(item => (
           <Link key={item.label} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
             <div style={{ fontSize: "2rem", marginBottom: 8 }}>{item.icon}</div>

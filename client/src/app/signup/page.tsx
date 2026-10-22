@@ -13,6 +13,8 @@ export default function Signup() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["archer"]);
   const [club, setClub] = useState("");
   const [category, setCategory] = useState("");
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -34,7 +36,14 @@ export default function Signup() {
       setError("Please select at least one role.");
       return;
     }
-    const ok = await signup(name, email, password, selectedRoles, club, category);
+    if (!agreeToTerms) {
+      setError("You must agree to the Privacy Policy and Terms of Service to create an account.");
+      return;
+    }
+    const ok = await signup({
+      name, email, password, roles: selectedRoles, club, category,
+      agreeToTerms, leaderboardOptIn,
+    });
     if (ok) {
       setSuccess(true);
     } else {
@@ -144,6 +153,35 @@ export default function Signup() {
               <input type="text" className="input" placeholder="e.g. Recurve" required value={category} onChange={e => setCategory(e.target.value)} />
             </div>
           </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "0.82rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={agreeToTerms}
+                onChange={(e) => setAgreeToTerms(e.target.checked)}
+                style={{ marginTop: 2 }}
+                required
+              />
+              <span>
+                I agree to the{" "}
+                <Link href="/privacy-policy" target="_blank" style={{ color: "var(--ke-green)", fontWeight: 600 }}>Privacy Policy</Link>{" "}
+                and{" "}
+                <Link href="/terms-of-service" target="_blank" style={{ color: "var(--ke-green)", fontWeight: 600 }}>Terms of Service</Link>.
+              </span>
+            </label>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "0.82rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={leaderboardOptIn}
+                onChange={(e) => setLeaderboardOptIn(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                I&apos;d like my scores to appear on the public leaderboard (you can change this anytime in Account Settings).
+              </span>
+            </label>
+          </div>
+
           <button type="submit" className="btn btn-green" disabled={loading} style={{ width: "100%", marginTop: 4 }}>
             {loading ? "Creating account..." : "Sign Up"}
           </button>

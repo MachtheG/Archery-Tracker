@@ -25,11 +25,23 @@ type AuthContextType = {
   loading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   verifyTwoFactor: (pendingToken: string, code: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string, roles: string[], club: string, category: string) => Promise<boolean>;
+  signup: (opts: SignupOptions) => Promise<boolean>;
   logout: () => void;
   hasRole: (role: string) => boolean;
   setLeaderboardPublic: (value: boolean) => Promise<boolean>;
   setTwoFactorEnabled: (value: boolean) => Promise<boolean>;
+  deleteAccount: (password: string) => Promise<{ ok: boolean; message: string }>;
+};
+
+export type SignupOptions = {
+  name: string;
+  email: string;
+  password: string;
+  roles: string[];
+  club: string;
+  category: string;
+  agreeToTerms: boolean;
+  leaderboardOptIn: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -156,26 +168,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const signup = async (
-    name: string,
-    email: string,
-    password: string,
-    roles: string[],
-    club: string,
-    category: string
-  ): Promise<boolean> => {
+  const signup = async (opts: SignupOptions): Promise<boolean> => {
     setLoading(true);
     try {
       const res = await fetch(apiUrl("/api/auth/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          email,
-          password,
-          role: roles[0] || "archer",
-          club,
-          category,
+          name: opts.name,
+          email: opts.email,
+          password: opts.password,
+          role: opts.roles[0] || "archer",
+          club: opts.club,
+          category: opts.category,
+          agreeToTerms: opts.agreeToTerms,
+          leaderboardOptIn: opts.leaderboardOptIn,
         }),
       });
       if (res.ok) {
@@ -224,10 +231,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setLeaderboardPublic = (value: boolean) => patchMe({ leaderboardPublic: value });
   const setTwoFactorEnabled = (value: boolean) => patchMe({ twoFactorEnabled: value });
 
+  const deleteAccount = async (password: string): Promise<{ ok: boolean; message: string }> => {
+    const token = localStorage.getItem("archery_token");
+    if (!token) return { ok: false, message: "Not logged in." };
+    try {
+      const res = await fetch(apiUrl("/api/auth/me"), {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        logout();
+        return { ok: true, message: data.message || "Account deleted." };
+      }
+      return { ok: false, message: data.message || "Could not delete account." };
+    } catch (err) {
+      console.error(err);
+      return { ok: false, message: "Could not reach the server." };
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user, loading, login, verifyTwoFactor, signup, logout, hasRole,
-      setLeaderboardPublic, setTwoFactorEnabled,
+      setLeaderboardPublic, setTwoFactorEnabled, deleteAccount,
     }}>
       {children}
     </AuthContext.Provider>

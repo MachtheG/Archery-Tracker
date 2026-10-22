@@ -61,6 +61,10 @@ User.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    consentAcceptedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,

@@ -46,7 +46,8 @@ router.post('/signup', [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('role').notEmpty().withMessage('Role is required'),
   body('club').notEmpty().withMessage('Club is required'),
-  body('category').notEmpty().withMessage('Category is required')
+  body('category').notEmpty().withMessage('Category is required'),
+  body('agreeToTerms').custom((value) => value === true).withMessage('You must agree to the Privacy Policy and Terms of Service'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -55,7 +56,7 @@ router.post('/signup', [
     }
 
     // Extract all fields as-is (case sensitive)
-    const { name, email, password, role, club, category } = req.body;
+    const { name, email, password, role, club, category, leaderboardOptIn } = req.body;
 
     // Self-serve signup can only ever create archer/coach accounts.
     // Admin accounts are granted by an existing admin or the one-time seed
@@ -78,7 +79,10 @@ router.post('/signup', [
       club,
       category,
       isVerified: false,
-      verificationToken
+      verificationToken,
+      consentAcceptedAt: new Date(),
+      // Opt-in, unchecked by default — separate from the required terms checkbox.
+      leaderboardPublic: leaderboardOptIn === true,
     });
 
     await sendVerificationEmail(user);
@@ -378,6 +382,93 @@ router.patch('/me', auth, async (req, res) => {
     await user.save();
 
     res.json({ user: publicUser(user) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Export everything we hold about the current user, as JSON (Data Protection
+// Act, 2019 right-to-access).
+router.get('/me/export', auth, async (req, res) => {
+  try {
+    const Session = require('../models/Session');
+    const Equipment = require('../models/Equipment');
+    const TuningEntry = require('../models/TuningEntry');
+    const StoreListing = require('../models/StoreListing');
+
+    const user = await User.findByPk(req.user.userId, { attributes: { exclude: ['password'] } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const [sessions, equipment, tuning, listings] = await Promise.all([
+      Session.findAll({ where: { userId: user.id } }),
+      Equipment.findAll({ where: { userId: user.id } }),
+      TuningEntry.findAll({ where: { userId: user.id } }),
+      StoreListing.findAll({ where: { sellerId: user.id } }),
+    ]);
+
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      profile: publicUser(user),
+      sessions,
+      equipment,
+      tuningEntries: tuning,
+      storeListings: listings,
+    };
+
+    res.setHeader('Content-Disposition', `attachment; filename="archery-tracker-export-${user.id}.json"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(exportData, null, 2));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Permanently delete the current user's account and everything they created
+// (Data Protection Act, 2019 right-to-erasure). Requires the current password
+// as confirmation, since a leaked JWT alone shouldn't be enough to wipe an
+// account.
+router.delete('/me', auth, [
+  body('password').notEmpty().withMessage('Password is required to confirm account deletion'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const Session = require('../models/Session');
+    const Equipment = require('../models/Equipment');
+    const TuningEntry = require('../models/TuningEntry');
+    const StoreListing = require('../models/StoreListing');
+
+    const user = await User.findByPk(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await user.comparePassword(req.body.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Incorrect password' });
+    }
+
+    await TuningEntry.destroy({ where: { userId: user.id } });
+    await Equipment.destroy({ where: { userId: user.id } });
+    await Session.destroy({ where: { userId: user.id } });
+    await StoreListing.destroy({ where: { sellerId: user.id } });
+    // Listings this user had reserved from someone else — release the hold
+    // rather than deleting another seller's listing.
+    await StoreListing.update(
+      { status: 'active', reservedByUserId: null, reservedAt: null },
+      { where: { reservedByUserId: user.id } }
+    );
+
+    await user.destroy();
+
+    res.json({ message: 'Account and all associated data have been permanently deleted.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

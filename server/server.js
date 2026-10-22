@@ -37,6 +37,7 @@ const tuningRoutes = require('./routes/tuning');
 const storeRoutes = require('./routes/store');
 const leaderboardRoutes = require('./routes/leaderboard');
 const competitionRoutes = require('./routes/competitions');
+const adminRoutes = require('./routes/admin');
 const orderRoutes = require('./routes/orders');
 const uploadRoutes = require('./routes/uploads');
 
@@ -99,6 +100,7 @@ app.use('/api/tuning', tuningRoutes);
 app.use('/api/store', storeRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/competitions', competitionRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/uploads', uploadRoutes);
 

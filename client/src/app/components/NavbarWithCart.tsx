@@ -4,7 +4,7 @@ import { useCart } from "../contexts/CartContext";
 import Link from "next/link";
 
 export default function NavbarWithCart() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
   const { items } = useCart();
   const cartCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
@@ -97,6 +97,14 @@ export default function NavbarWithCart() {
             }}>
               Account
             </Link>
+            {hasRole("admin") && (
+              <Link href="/admin" style={{
+                color: "var(--ke-gold)", fontSize: "0.75rem", fontWeight: 600,
+                padding: "4px 8px", border: "1px solid var(--ke-gold)", borderRadius: "var(--radius-sm)",
+              }}>
+                Admin
+              </Link>
+            )}
             <button onClick={logout} style={{
               background: "none", border: "1px solid rgba(255,255,255,0.2)",
               color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", padding: "4px 8px",
