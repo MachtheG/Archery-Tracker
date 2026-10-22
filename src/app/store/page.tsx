@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import { getStoreListings, addStoreListing } from "../lib/storage";
 import type { StoreListing } from "../lib/storage";
+import { apiUrl } from "../lib/api";
 import Link from "next/link";
 
 const CATEGORIES = ["All", "Bows", "Arrows", "Limbs", "Strings", "Accessories", "Apparel", "Other"];
@@ -21,38 +22,56 @@ export default function Store() {
   const [sellPrice, setSellPrice] = useState("");
   const [sellCondition, setSellCondition] = useState<StoreListing["condition"]>("used");
   const [sellCategory, setSellCategory] = useState("Accessories");
+  const [sellImage, setSellImage] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [sellSuccess, setSellSuccess] = useState(false);
 
   useEffect(() => {
-    setListings(getStoreListings());
+    getStoreListings().then(setListings);
   }, []);
 
-  const refresh = () => setListings(getStoreListings());
+  const refresh = () => getStoreListings().then(setListings);
 
   const filtered = selectedCategory === "All"
     ? listings
     : listings.filter(l => l.category === selectedCategory);
 
-  const handleSellSubmit = (e: React.FormEvent) => {
+  const handleSellSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    
+    setIsUploading(true);
+    let uploadedImageUrl = undefined;
 
-    const listing: StoreListing = {
-      id: `user-${Date.now()}`,
+    if (sellImage) {
+      const formData = new FormData();
+      formData.append("image", sellImage);
+
+      try {
+        const res = await fetch(apiUrl("/api/uploads"), {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          uploadedImageUrl = data.imageUrl;
+        } else {
+          console.error("Failed to upload image");
+        }
+      } catch (err) {
+        console.error("Error uploading image:", err);
+      }
+    }
+
+    await addStoreListing({
       name: sellName,
       description: sellDesc,
       priceKES: parseInt(sellPrice) || 0,
       condition: sellCondition,
       category: sellCategory,
-      sellerName: user.name,
-      sellerEmail: user.email,
-      sellerId: user.id,
-      listedAt: new Date().toISOString().slice(0, 10),
-      sold: false,
+      imageUrl: uploadedImageUrl,
       imageEmoji: sellCategory === "Bows" ? "🏹" : sellCategory === "Arrows" ? "➡️" : "🎯",
-    };
-
-    addStoreListing(listing);
+    });
 
     // Reset form
     setSellName("");
@@ -60,6 +79,8 @@ export default function Store() {
     setSellPrice("");
     setSellCondition("used");
     setSellCategory("Accessories");
+    setSellImage(null);
+    setIsUploading(false);
     setShowSellForm(false);
     setSellSuccess(true);
     setTimeout(() => setSellSuccess(false), 4000);
@@ -154,10 +175,16 @@ export default function Store() {
                 {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 4 }}>Image (Optional)</label>
+              <input type="file" className="input" accept="image/*" onChange={e => setSellImage(e.target.files?.[0] || null)} />
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <button type="submit" className="btn btn-green">List for Sale</button>
-            <button type="button" onClick={() => setShowSellForm(false)} className="btn btn-outline">Cancel</button>
+            <button type="submit" className="btn btn-green" disabled={isUploading}>
+              {isUploading ? "Uploading..." : "List for Sale"}
+            </button>
+            <button type="button" onClick={() => setShowSellForm(false)} className="btn btn-outline" disabled={isUploading}>Cancel</button>
           </div>
         </form>
       )}

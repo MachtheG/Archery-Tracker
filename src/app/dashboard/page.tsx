@@ -16,8 +16,8 @@ function ArcherSection() {
   const [eqCount, setEqCount] = useState(0);
 
   useEffect(() => {
-    setSessions(getSessions());
-    setEqCount(getEquipmentList().length);
+    getSessions().then(setSessions);
+    getEquipmentList().then((list) => setEqCount(list.length));
   }, []);
 
   const totalArrows = sessions.reduce((s, sess) => s + computeSessionStats(sess).totalArrows, 0);
@@ -50,6 +50,8 @@ function ArcherSection() {
           { icon: "📊", label: "View Analytics", href: "/analytics", desc: "Charts, trends, and patterns" },
           { icon: "🏹", label: "My Equipment", href: "/equipment", desc: "Virtual Quiver & tuning log" },
           { icon: "🏆", label: "Leaderboard", href: "/leaderboard", desc: "See top archers" },
+          { icon: "🎖️", label: "Competition Results", href: "/competitions", desc: "Past event results" },
+          { icon: "📥", label: "Import Past Scores", href: "/import-scores", desc: "Bring in old training data" },
           { icon: "🏷️", label: "Sell Equipment", href: "/store", desc: "List items for sale" },
         ].map(item => (
           <Link key={item.href + item.label} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
@@ -105,7 +107,7 @@ function CoachSection() {
         {[
           { icon: "🏹", label: "Post Training Routines", href: "/training-blog", desc: "Share drills with archers" },
           { icon: "📰", label: "Post National Updates", href: "/national-updates", desc: "Announce events" },
-          { icon: "📊", label: "Update Leaderboard", href: "/leaderboard", desc: "Post competition results" },
+          { icon: "🎖️", label: "Post Competition Results", href: "/competitions", desc: "Record results from real events" },
         ].map(item => (
           <Link key={item.label} href={item.href} className="card" style={{ textAlign: "center", padding: "24px 14px", cursor: "pointer" }}>
             <div style={{ fontSize: "2rem", marginBottom: 8 }}>{item.icon}</div>
@@ -125,7 +127,7 @@ function AdminSection() {
       <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px" }}>🔐 Admin Tools</h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14, marginBottom: 28 }}>
         {[
-          { icon: "📊", label: "Manage Leaderboard", href: "/leaderboard", desc: "Post & manage results" },
+          { icon: "🎖️", label: "Competition Results", href: "/competitions", desc: "Post & manage results" },
           { icon: "📰", label: "National Updates", href: "/national-updates", desc: "Post announcements" },
           { icon: "🏹", label: "Training Blog", href: "/training-blog", desc: "Share routines" },
           { icon: "🛒", label: "Store Management", href: "/store", desc: "View marketplace" },

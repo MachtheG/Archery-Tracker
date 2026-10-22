@@ -13,7 +13,7 @@ export default function AnalyticsPage() {
   const [selectedDistance, setSelectedDistance] = useState<number | "all">("all");
 
   useEffect(() => {
-    setSessions(getSessions());
+    getSessions().then(setSessions);
   }, []);
 
   if (!user) {

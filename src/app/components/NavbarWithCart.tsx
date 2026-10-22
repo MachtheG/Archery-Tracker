@@ -14,6 +14,7 @@ export default function NavbarWithCart() {
     { href: "/analytics", label: "Analytics" },
     { href: "/equipment", label: "Equipment" },
     { href: "/leaderboard", label: "Leaderboard" },
+    { href: "/competitions", label: "Competitions" },
     { href: "/community", label: "Community" },
     { href: "/training-blog", label: "Blog" },
     { href: "/national-updates", label: "Updates" },
@@ -89,6 +90,12 @@ export default function NavbarWithCart() {
               padding: "5px 10px", background: "var(--ke-green)", borderRadius: "var(--radius-sm)",
             }}>
               Dashboard
+            </Link>
+            <Link href="/account" style={{
+              color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", fontWeight: 600,
+              padding: "4px 8px", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "var(--radius-sm)",
+            }}>
+              Account
             </Link>
             <button onClick={logout} style={{
               background: "none", border: "1px solid rgba(255,255,255,0.2)",

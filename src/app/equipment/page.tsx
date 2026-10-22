@@ -22,19 +22,18 @@ export default function EquipmentPage() {
   const [tuneForm, setTuneForm] = useState({ change: "", impact: "", notes: "" });
 
   useEffect(() => {
-    setEquipment(getEquipmentList());
-    setTuning(getTuningEntries());
+    refresh();
   }, []);
 
   const refresh = () => {
-    setEquipment(getEquipmentList());
-    setTuning(getTuningEntries());
+    getEquipmentList().then(setEquipment);
+    getTuningEntries().then(setTuning);
   };
 
-  const handleSaveEquipment = (e: React.FormEvent) => {
+  const handleSaveEquipment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const eq: Equipment = {
-      id: form.id || Date.now().toString(),
+    const eq: Partial<Equipment> & { name: string } = {
+      id: form.id,
       name: form.name || "Unnamed Setup",
       bowType: (form.bowType as Equipment["bowType"]) || "recurve",
       drawWeight: form.drawWeight || "",
@@ -45,19 +44,17 @@ export default function EquipmentPage() {
       arrowLength: form.arrowLength || "",
       sightSettings: form.sightSettings || "",
       notes: form.notes || "",
-      createdAt: form.createdAt || new Date().toISOString().slice(0, 10),
     };
-    saveEquipment(eq);
+    await saveEquipment(eq);
     setShowForm(false);
     setForm({ bowType: "recurve" });
     refresh();
   };
 
-  const handleAddTuning = (e: React.FormEvent) => {
+  const handleAddTuning = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedId || !tuneForm.change.trim()) return;
-    saveTuningEntry({
-      id: Date.now().toString(),
+    await saveTuningEntry({
       equipmentId: selectedId,
       date: new Date().toISOString().slice(0, 10),
       change: tuneForm.change,
@@ -184,7 +181,7 @@ export default function EquipmentPage() {
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button onClick={() => { setForm(eq); setShowForm(true); }} className="btn btn-outline" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>Edit</button>
-                    <button onClick={() => { deleteEquipment(eq.id); refresh(); }} className="btn btn-outline" style={{ fontSize: "0.75rem", padding: "4px 8px", color: "var(--ke-red)" }}>Delete</button>
+                    <button onClick={async () => { await deleteEquipment(eq.id); refresh(); }} className="btn btn-outline" style={{ fontSize: "0.75rem", padding: "4px 8px", color: "var(--ke-red)" }}>Delete</button>
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: "0.85rem" }}>

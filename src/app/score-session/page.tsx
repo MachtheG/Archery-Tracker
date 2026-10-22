@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { ROUNDS, getRoundById, getScoreValues, getScoreColor, getTargetFace } from "../lib/rounds";
 import { saveSession, getEquipmentList } from "../lib/storage";
@@ -29,11 +29,9 @@ export default function ScoreSessionPage() {
   const [notes, setNotes] = useState("");
 
   // Load equipment on mount
-  useState(() => {
-    if (typeof window !== "undefined") {
-      setEquipmentList(getEquipmentList());
-    }
-  });
+  useEffect(() => {
+    getEquipmentList().then(setEquipmentList);
+  }, []);
 
   const round = getRoundById(roundId);
   const isCustom = roundId === "practice-custom";
@@ -111,7 +109,7 @@ export default function ScoreSessionPage() {
     setStep("review");
   };
 
-  const saveAndExit = () => {
+  const saveAndExit = async () => {
     let finalEnds = step === "review" ? ends : [...ends];
     if (step !== "review" && currentArrows.length > 0) {
       finalEnds.push({ arrows: currentArrows });
@@ -140,7 +138,7 @@ export default function ScoreSessionPage() {
       notes,
     };
 
-    saveSession(session);
+    await saveSession(session);
     setStep("setup");
     setRoundId("");
     setEnds([]);

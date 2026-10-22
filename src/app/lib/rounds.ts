@@ -1,10 +1,12 @@
-// ===== Official World Archery Target Colors (Pantone) =====
-const WA_GOLD   = "#FFE552"; // Pantone 107
-const WA_RED    = "#F65058"; // Pantone 032
-const WA_BLUE   = "#00B4E4"; // Pantone 306
+// ===== Official World Archery Target Colors =====
+// Zone order (World Archery Rule Book, outer to inner): white, black, light blue, red, gold.
+// Hex values match World Archery's published Pantone equivalents for these zone colors.
+const WA_GOLD   = "#FFC726"; // Pantone 123 C
+const WA_RED    = "#F42A41"; // Pantone 032 C
+const WA_BLUE   = "#00B5E6"; // Pantone 306 C (light blue)
 const WA_BLACK  = "#000000";
 const WA_WHITE  = "#FFFFFF";
-const FIELD_YELLOW = "#FFE552";
+const FIELD_YELLOW = "#FFC726";
 const FIELD_BLACK  = "#1A1A1A";
 
 // ===== Target Face Configurations =====

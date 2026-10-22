@@ -1,93 +1,113 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { apiUrl } from "../lib/api";
 
-type Result = { id: number; archer: string; score: number; event: string; date: string };
-
-const initialResults: Result[] = [
-  { id: 1, archer: "Jane Wambui", score: 682, event: "Nairobi Open", date: "2026-02-18" },
-  { id: 2, archer: "Samuel Kiptoo", score: 670, event: "Nairobi Open", date: "2026-02-18" },
-  { id: 3, archer: "Amina Hassan", score: 665, event: "Nairobi Open", date: "2026-02-18" },
-  { id: 4, archer: "Brian Otieno", score: 640, event: "Nairobi Open", date: "2026-02-18" },
-  { id: 5, archer: "Grace Njeri", score: 635, event: "Mombasa Classic", date: "2026-03-01" },
-];
+type LeaderboardEntry = {
+  archer: string;
+  club: string;
+  category: string;
+  score: number;
+  roundName: string;
+  date: string;
+  sessionsLogged: number;
+};
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
+function monthOptions(): { value: string; label: string }[] {
+  const opts = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    opts.push({ value, label });
+  }
+  return opts;
+}
+
 export default function Leaderboard() {
-  const { user, hasRole } = useAuth();
-  const [results, setResults] = useState<Result[]>(initialResults);
-  const [archer, setArcher] = useState("");
-  const [score, setScore] = useState("");
-  const [event, setEvent] = useState("");
-  const [error, setError] = useState("");
+  const { user, setLeaderboardPublic } = useAuth();
+  const months = monthOptions();
+  const [month, setMonth] = useState(months[0].value);
+  const [results, setResults] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [togglePending, setTogglePending] = useState(false);
 
-  const canPost = hasRole("coach") || hasRole("admin");
+  useEffect(() => {
+    setLoading(true);
+    fetch(apiUrl(`/api/leaderboard?month=${month}`))
+      .then((res) => res.json())
+      .then((data) => setResults(data.results || []))
+      .catch(() => setResults([]))
+      .finally(() => setLoading(false));
+  }, [month]);
 
-  const handlePost = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!archer.trim() || !score.trim() || !event.trim() || isNaN(Number(score))) {
-      setError("All fields required. Score must be a number.");
-      return;
-    }
-    setResults([
-      { id: Date.now(), archer, score: Number(score), event, date: new Date().toISOString().slice(0, 10) },
-      ...results,
-    ]);
-    setArcher("");
-    setScore("");
-    setEvent("");
-    setError("");
+  const handleTogglePrivacy = async () => {
+    if (!user) return;
+    setTogglePending(true);
+    await setLeaderboardPublic(!user.leaderboardPublic);
+    setTogglePending(false);
   };
-
-  const sorted = [...results].sort((a, b) => b.score - a.score);
 
   return (
     <div className="page-wrap">
       <h1 className="page-title">Leaderboard</h1>
-      <p className="page-subtitle">Top archery scores across Kenya</p>
+      <p className="page-subtitle">Top scores logged by archers across Kenya this month, from real sessions</p>
 
-      {/* Post form — Coach & Admin only */}
-      {canPost && (
-        <div className="card" style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 14 }}>Post a Result</h2>
-          <form onSubmit={handlePost} style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-            <div style={{ flex: "1 1 140px" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Archer</label>
-              <input className="input" value={archer} onChange={e => setArcher(e.target.value)} placeholder="Name" />
-            </div>
-            <div style={{ flex: "0 1 100px" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Score</label>
-              <input className="input" value={score} onChange={e => setScore(e.target.value)} placeholder="720" />
-            </div>
-            <div style={{ flex: "1 1 140px" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Event</label>
-              <input className="input" value={event} onChange={e => setEvent(e.target.value)} placeholder="Competition name" />
-            </div>
-            <button type="submit" className="btn btn-gold">Post Result</button>
-          </form>
-          {error && <div className="error-text" style={{ marginTop: 8 }}>{error}</div>}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+        <div>
+          <label style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4, display: "block" }}>Month</label>
+          <select className="select" value={month} onChange={(e) => setMonth(e.target.value)}>
+            {months.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
         </div>
+
+        {user && (
+          <div style={{ fontSize: "0.85rem", textAlign: "right" }}>
+            <div style={{ color: "var(--text-secondary)", marginBottom: 4 }}>
+              You are currently{" "}
+              <strong style={{ color: user.leaderboardPublic ? "var(--ke-green)" : "var(--text-muted)" }}>
+                {user.leaderboardPublic ? "visible" : "hidden"}
+              </strong>{" "}
+              on the public leaderboard.
+            </div>
+            <button
+              onClick={handleTogglePrivacy}
+              disabled={togglePending}
+              className="btn btn-outline"
+              style={{ fontSize: "0.8rem", padding: "4px 12px" }}
+            >
+              {togglePending ? "Updating..." : user.leaderboardPublic ? "Make my scores private" : "Make my scores public"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {!user && (
+        <p style={{ color: "var(--text-muted)", marginBottom: 20 }}>
+          Log in and start logging sessions to appear here, or to opt out of the public leaderboard.
+        </p>
       )}
 
-      {!user && <p style={{ color: "var(--text-muted)", marginBottom: 24 }}>Log in to see full leaderboard features.</p>}
-      {user && !canPost && <p style={{ color: "var(--text-muted)", marginBottom: 24, fontSize: "0.9rem" }}>Only coaches and admins can post results.</p>}
-
-      {/* Leaderboard table */}
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "var(--ke-black)", color: "var(--ke-white)" }}>
               <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>#</th>
               <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>Archer</th>
-              <th style={{ padding: "12px 16px", textAlign: "center", fontWeight: 600, fontSize: "0.85rem" }}>Score</th>
-              <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>Event</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>Club</th>
+              <th style={{ padding: "12px 16px", textAlign: "center", fontWeight: 600, fontSize: "0.85rem" }}>Best Score</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, fontSize: "0.85rem" }}>Round</th>
               <th style={{ padding: "12px 16px", textAlign: "right", fontWeight: 600, fontSize: "0.85rem" }}>Date</th>
             </tr>
           </thead>
           <tbody>
-            {sorted.slice(0, 15).map((r, i) => (
-              <tr key={r.id} style={{
+            {results.slice(0, 50).map((r, i) => (
+              <tr key={`${r.archer}-${i}`} style={{
                 borderBottom: "1px solid var(--border-light)",
                 background: i < 3 ? "rgba(212,160,23,0.06)" : undefined,
               }}>
@@ -95,11 +115,26 @@ export default function Leaderboard() {
                   {i < 3 ? MEDALS[i] : i + 1}
                 </td>
                 <td style={{ padding: "12px 16px", fontWeight: i < 3 ? 700 : 400 }}>{r.archer}</td>
+                <td style={{ padding: "12px 16px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>{r.club}</td>
                 <td style={{ padding: "12px 16px", textAlign: "center", fontWeight: 700, color: "var(--ke-green)" }}>{r.score}</td>
-                <td style={{ padding: "12px 16px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>{r.event}</td>
+                <td style={{ padding: "12px 16px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>{r.roundName}</td>
                 <td style={{ padding: "12px 16px", textAlign: "right", fontSize: "0.85rem", color: "var(--text-muted)" }}>{r.date}</td>
               </tr>
             ))}
+            {!loading && results.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ padding: "24px 16px", textAlign: "center", color: "var(--text-muted)" }}>
+                  No public scores logged for this month yet.
+                </td>
+              </tr>
+            )}
+            {loading && (
+              <tr>
+                <td colSpan={6} style={{ padding: "24px 16px", textAlign: "center", color: "var(--text-muted)" }}>
+                  Loading...
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

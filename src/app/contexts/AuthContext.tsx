@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { apiUrl, authHeaders } from "../lib/api";
 
 export type User = {
   id: string;
@@ -9,17 +10,26 @@ export type User = {
   role: string;       // primary role (first in array) — kept for backward compat
   club: string;
   category: string;
+  leaderboardPublic: boolean;
+  twoFactorEnabled: boolean;
 };
 
-type StoredUser = User & { password: string };
+export type LoginResult =
+  | { status: "ok" }
+  | { status: "twoFactorRequired"; pendingToken: string }
+  | { status: "emailNotVerified" }
+  | { status: "error"; message: string };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  verifyTwoFactor: (pendingToken: string, code: string) => Promise<boolean>;
   signup: (name: string, email: string, password: string, roles: string[], club: string, category: string) => Promise<boolean>;
   logout: () => void;
   hasRole: (role: string) => boolean;
+  setLeaderboardPublic: (value: boolean) => Promise<boolean>;
+  setTwoFactorEnabled: (value: boolean) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,26 +40,29 @@ export function useAuth() {
   return ctx;
 }
 
-// Simple localStorage user registry
-function getUserRegistry(): StoredUser[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem("archery_users_registry");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
+type ApiUser = {
+  id: string | number;
+  name: string;
+  email: string;
+  role: string;
+  club: string;
+  category: string;
+  leaderboardPublic?: boolean;
+  twoFactorEnabled?: boolean;
+};
 
-function saveUserRegistry(users: StoredUser[]) {
-  localStorage.setItem("archery_users_registry", JSON.stringify(users));
-}
-
-// Admin invite code — simple secret phrase required to register as admin
-const ADMIN_INVITE_CODE = "ARCHERYKE-ADMIN-2026";
-
-export function validateAdminCode(code: string): boolean {
-  return code.trim().toUpperCase() === ADMIN_INVITE_CODE;
+function toSessionUser(apiUser: ApiUser): User {
+  return {
+    id: apiUser.id.toString(),
+    name: apiUser.name,
+    email: apiUser.email,
+    roles: [apiUser.role],
+    role: apiUser.role,
+    club: apiUser.club,
+    category: apiUser.category,
+    leaderboardPublic: apiUser.leaderboardPublic !== false,
+    twoFactorEnabled: apiUser.twoFactorEnabled === true,
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -67,6 +80,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             parsed.roles = [parsed.role || "archer"];
           }
           parsed.role = parsed.roles[0];
+          if (typeof parsed.leaderboardPublic !== "boolean") {
+            parsed.leaderboardPublic = true;
+          }
+          if (typeof parsed.twoFactorEnabled !== "boolean") {
+            parsed.twoFactorEnabled = false;
+          }
           setUser(parsed as User);
         }
       } catch {
@@ -75,28 +94,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const establishSession = (data: { token: string; user: ApiUser }) => {
+    const sessionUser = toSessionUser(data.user);
+    setUser(sessionUser);
+    localStorage.setItem("archery_user", JSON.stringify(sessionUser));
+    localStorage.setItem("archery_token", data.token);
+  };
+
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        if (data.twoFactorRequired) {
+          setLoading(false);
+          return { status: "twoFactorRequired", pendingToken: data.pendingToken };
+        }
+        establishSession(data);
+        setLoading(false);
+        return { status: "ok" };
+      }
+
+      if (res.status === 403 && data.code === "EMAIL_NOT_VERIFIED") {
+        setLoading(false);
+        return { status: "emailNotVerified" };
+      }
+
+      setLoading(false);
+      return { status: "error", message: data.message || "Invalid email or password." };
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      return { status: "error", message: "Could not reach the server. Please try again." };
+    }
+  };
+
+  const verifyTwoFactor = async (pendingToken: string, code: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const res = await fetch(apiUrl("/api/auth/verify-2fa"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pendingToken, code }),
+      });
       if (res.ok) {
         const data = await res.json();
-        const sessionUser: User = {
-          id: data.user.id.toString(),
-          name: data.user.name,
-          email: data.user.email,
-          roles: [data.user.role],
-          role: data.user.role,
-          club: data.user.club,
-          category: data.user.category,
-        };
-        setUser(sessionUser);
-        localStorage.setItem("archery_user", JSON.stringify(sessionUser));
-        localStorage.setItem("archery_token", data.token);
+        establishSession(data);
         setLoading(false);
         return true;
       }
@@ -117,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+      const res = await fetch(apiUrl("/api/auth/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -151,8 +200,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user.roles.includes(role);
   };
 
+  const patchMe = async (body: Record<string, boolean>): Promise<boolean> => {
+    const token = localStorage.getItem("archery_token");
+    if (!user || !token) return false;
+    try {
+      const res = await fetch(apiUrl("/api/auth/me"), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      const updated = toSessionUser(data.user);
+      setUser(updated);
+      localStorage.setItem("archery_user", JSON.stringify(updated));
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
+  const setLeaderboardPublic = (value: boolean) => patchMe({ leaderboardPublic: value });
+  const setTwoFactorEnabled = (value: boolean) => patchMe({ twoFactorEnabled: value });
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, hasRole }}>
+    <AuthContext.Provider value={{
+      user, loading, login, verifyTwoFactor, signup, logout, hasRole,
+      setLeaderboardPublic, setTwoFactorEnabled,
+    }}>
       {children}
     </AuthContext.Provider>
   );

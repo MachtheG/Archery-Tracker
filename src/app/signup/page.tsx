@@ -152,9 +152,6 @@ export default function Signup() {
             Already have an account?{" "}
             <Link href="/login" style={{ color: "var(--ke-green)", fontWeight: 600 }}>Log In</Link>
           </div>
-          <div style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)", marginTop: 4 }}>
-            Admin access? <Link href="/admin/register" style={{ color: "var(--ke-gold)", fontWeight: 600 }}>Register as Admin →</Link>
-          </div>
         </form>
         </>
         )}

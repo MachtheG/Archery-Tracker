@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
 import { markListingSold, getAllStoreListings } from "../lib/storage";
 import type { StoreListing } from "../lib/storage";
+import { apiUrl } from "../lib/api";
 import Link from "next/link";
 
 export default function Cart() {
@@ -23,18 +24,18 @@ export default function Cart() {
   const handleConfirmPurchase = async () => {
     if (!user) return;
 
-    const allListings = getAllStoreListings();
+    const allListings = await getAllStoreListings();
     const confirmed: typeof confirmedItems = [];
     const sellers: Record<string, any> = {};
 
     // Mark each purchased listing as sold and gather seller info
-    items.forEach(item => {
+    for (const item of items) {
       const listing = allListings.find(l => l.id === item.id);
       let sellerEmail = "store@archeryke.co.ke";
       let sellerName = "Archery KE Store";
 
       if (listing) {
-        markListingSold(listing.id);
+        await markListingSold(listing.id);
         sellerEmail = listing.sellerEmail;
         sellerName = listing.sellerName;
       }
@@ -50,10 +51,10 @@ export default function Cart() {
         sellers[sellerEmail] = { sellerName, items: [] };
       }
       sellers[sellerEmail].items.push({ name: item.name, price: item.price });
-    });
+    }
 
     try {
-      await fetch("http://localhost:5000/api/orders/checkout", {
+      await fetch(apiUrl("/api/orders/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
