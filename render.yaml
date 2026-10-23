@@ -1,0 +1,36 @@
+databases:
+  - name: archery-tracker-db
+    databaseName: archery_tracker
+    user: archery_user
+    plan: free
+    region: oregon
+
+services:
+  - type: web
+    name: archery-tracker-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: archery-tracker-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      # Fill in after creating a Resend account (resend.com) and verifying a
+      # sending domain — until set, the API logs emails instead of sending them.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "Archery Tracker Kenya <onboarding@resend.dev>"
+      # Fill in with your Vercel client URL(s) once that's deployed, e.g.
+      # https://archery-tracker.vercel.app (comma-separate for more than one)
+      - key: CLIENT_URL
+        sync: false

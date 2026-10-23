@@ -10,7 +10,10 @@ const { JWT_SECRET } = require('../config');
 const auth = require('../middleware/auth');
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
+// RENDER_EXTERNAL_URL is auto-injected by Render on every web service — used
+// as a fallback so verification/reset links work without manually setting
+// SERVER_URL after each deploy.
+const SERVER_URL = process.env.SERVER_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:5000';
 
 function publicUser(user) {
   return {
