@@ -2,14 +2,16 @@ const { Resend } = require('resend');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// A missing email provider should degrade the app (log instead of send),
+// never crash it — unlike JWT_SECRET, this isn't a security property, so we
+// never throw here regardless of environment.
 let resend = null;
 if (process.env.RESEND_API_KEY) {
   resend = new Resend(process.env.RESEND_API_KEY);
-} else if (isProduction) {
-  throw new Error('RESEND_API_KEY environment variable must be set in production');
 } else {
+  const level = isProduction ? 'WARNING (production)' : 'WARNING';
   console.warn(
-    'WARNING: RESEND_API_KEY is not set. Emails will be logged to the console instead of sent. ' +
+    `${level}: RESEND_API_KEY is not set. Emails will be logged to the console instead of sent. ` +
     'Sign up at https://resend.com, create an API key, and set RESEND_API_KEY to send real email.'
   );
 }
